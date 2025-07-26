@@ -2,9 +2,9 @@ import abc
 import asyncio
 import base64
 import typing
-
+import json
+# import requests
 import aiohttp
-import requests
 import tencentcloud.common.credential
 import tencentcloud.lke.v20231130.lke_client
 import tencentcloud.lke.v20231130.models
@@ -129,13 +129,16 @@ class ImageResolver(Resolver):
                 req = tencentcloud.lke.v20231130.models.DescribeNodeRunRequest()
                 req.NodeRunId = end_node_run_id
                 resp = TENCENT_LKE_CLIENT.DescribeNodeRun(req)
+                if not resp.NodeRun.OutputRef:
+                    return json.loads(resp.NodeRun.Output)
                 # TODO extract to download()
-                # async with aiohttp.ClientSession(connector=AIOHTTP_CONNECTOR_GETTER()) as session:
-                #     async with session.get(resp.NodeRun.OutputRef) as response:
-                #         response.raise_for_status()
-                #         raw_res = await response.json()
-                #         return raw_res
-                return requests.get(resp.NodeRun.OutputRef).json()
+                async with aiohttp.ClientSession(connector=AIOHTTP_CONNECTOR_GETTER()) as session:
+                    async with session.get(resp.NodeRun.OutputRef) as response:
+                        response.raise_for_status()
+                        raw_res = await response.json()
+                        return raw_res
+                # else:
+                    # return requests.get(url=resp.NodeRun.OutputRef).json()
 
         raise RuntimeError("Workflow did not complete successfully.")
 

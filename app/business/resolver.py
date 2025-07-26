@@ -1,8 +1,6 @@
 import abc
 import asyncio
 import base64
-import json
-import time
 import typing
 
 import aiohttp

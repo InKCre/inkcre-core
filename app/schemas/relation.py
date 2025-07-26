@@ -1,7 +1,6 @@
 import typing
 import datetime
 import pydantic
-import sqlalchemy
 import sqlalchemy.orm
 import pgvector.sqlalchemy
 

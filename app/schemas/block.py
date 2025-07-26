@@ -4,8 +4,6 @@ import typing
 
 import pgvector.sqlalchemy
 import pydantic
-import sqlalchemy
-import sqlalchemy.dialects.postgresql
 import sqlalchemy.orm
 
 from app.llm import get_embeddings

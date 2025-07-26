@@ -3,7 +3,6 @@ import typing
 
 import aiohttp
 import pydantic
-import sqlalchemy
 import sqlalchemy.orm
 import ssl
 import certifi

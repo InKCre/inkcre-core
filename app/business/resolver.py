@@ -8,10 +8,10 @@ import tencentcloud.common.credential
 import tencentcloud.lke.v20231130.lke_client
 import tencentcloud.lke.v20231130.models
 
-from app.engine import SessionLocal
-from app.schemas.block import ResolverType, BlockModel, BlockTable
-from app.schemas.relation import RelationModel, RelationTable
-from app.schemas.storage import AIOHTTP_CONNECTOR_GETTER, StorageType
+from ..engine import SessionLocal
+from ..schemas.block import ResolverType, BlockModel, BlockTable
+from ..schemas.relation import RelationModel, RelationTable
+from ..schemas.storage import AIOHTTP_CONNECTOR_GETTER, StorageType
 
 
 TENCENT_LKE_CLIENT = tencentcloud.lke.v20231130.lke_client.LkeClient(

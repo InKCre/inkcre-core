@@ -1,12 +1,11 @@
 import enum
 import typing
-
 import aiohttp
 import pydantic
 import sqlalchemy.orm
 import ssl
 import certifi
-from app.utils import enum_serializer
+from ..utils import enum_serializer
 
 
 AIOHTTP_CONNECTOR_GETTER = lambda: aiohttp.TCPConnector(ssl=ssl.create_default_context(cafile=certifi.where()))

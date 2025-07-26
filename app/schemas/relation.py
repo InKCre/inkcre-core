@@ -4,8 +4,8 @@ import pydantic
 import sqlalchemy.orm
 import pgvector.sqlalchemy
 
-from app.llm import get_embeddings
-from app.schemas.block import BlockTable
+from ..llm import get_embeddings
+from ..schemas.block import BlockTable
 
 Base = sqlalchemy.orm.declarative_base()
 

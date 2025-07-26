@@ -8,11 +8,11 @@ import pydantic
 import fastapi
 import sqlalchemy.orm
 
-from app.business.resolver import Resolver
-from app.engine import get_db_session, SessionLocal
-from app.llm import one_chat, multi_chat
-from app.schemas.block import BlockTable, BlockModel
-from app.schemas.relation import RelationTable, RelationModel
+from .resolver import Resolver
+from ..engine import get_db_session, SessionLocal
+from ..llm import one_chat, multi_chat
+from ..schemas.block import BlockTable, BlockModel
+from ..schemas.relation import RelationTable, RelationModel
 
 BLOCK_ROUTER = fastapi.APIRouter(
     prefix="/blocks"

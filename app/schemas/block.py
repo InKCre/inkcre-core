@@ -6,10 +6,10 @@ import pgvector.sqlalchemy
 import pydantic
 import sqlalchemy.orm
 
-from app.llm import get_embeddings
-from app.engine import SessionLocal
-from app.utils import enum_serializer
-from app.schemas.storage import StorageTable, StorageType, StorageModel
+from ..llm import get_embeddings
+from ..engine import SessionLocal
+from ..utils import enum_serializer
+from ..schemas.storage import StorageTable, StorageType, StorageModel
 
 Base = sqlalchemy.orm.declarative_base()
 

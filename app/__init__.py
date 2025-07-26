@@ -10,5 +10,5 @@ def heartbeat():
     """Check if the API is running."""
     return {"status": "ok"}
 
-from .business.block import BLOCK_ROUTER
+from business.block import BLOCK_ROUTER
 api_app.include_router(BLOCK_ROUTER)

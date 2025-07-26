@@ -1,18 +1,21 @@
 __all__ = [
     "get_embeddings",
-    "one_chat"
+    "one_chat",
+    "multi_chat"
 ]
 
+import os
 import typing
-
-from dulwich.pack import write_pack_index
 from openai import OpenAI
 from openai.types.chat import ChatCompletionUserMessageParam, ChatCompletionAssistantMessageParam
 
-PPIO_AK = "sk_wfzM-fDurfSlkc1VO6gM5YKQsUsNOyHwhUuBNj-EK4k"
+# Config
+LLM_SP_AK = os.getenv("LLM_SP_BASE_URL", "")
+LLM_SP_BASE_URL = os.getenv("LLM_SP_BASE_URL", "")
+
 OPENAI_CLIENT = OpenAI(
-    base_url="https://api.ppinfra.com/v3/openai",
-    api_key=PPIO_AK,
+    base_url=LLM_SP_BASE_URL,
+    api_key=LLM_SP_AK,
 )
 
 

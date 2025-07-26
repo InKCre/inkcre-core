@@ -1,4 +1,3 @@
-
 __all__ = [
     "BLOCK_ROUTER",
 ]
@@ -19,6 +18,27 @@ BLOCK_ROUTER = fastapi.APIRouter(
     prefix="/blocks"
 )
 
+@BLOCK_ROUTER.get("/recent")
+def get_recent_blocks(
+    num: int = 10,
+    db_session: sqlalchemy.orm.Session = fastapi.Depends(get_db_session),
+) -> list[BlockModel]:
+    """获取最新的块
+    """
+    return _get_recent_blocks(num=num, db_session=db_session)
+
+def _get_recent_blocks(
+    num: int,
+    db_session: sqlalchemy.orm.Session
+) -> list[BlockModel]:
+    block_tables = db_session.query(BlockTable).order_by(
+        BlockTable.updated_at.desc()
+    ).limit(num).all()
+
+    return [
+        BlockModel.model_validate(block_table)
+        for block_table in block_tables
+    ]
 
 @BLOCK_ROUTER.get("/{block_id}")
 def get_block(
@@ -330,3 +350,4 @@ async def llm_driven_block_query(
             raise ValueError(f"unknown command from LLM, {command}")
 
     return await llm_driven_query(start_block.id)
+

@@ -1,4 +1,3 @@
-
 __all__ = [
     'SQLDB_ENGINE',
     'get_db_session',
@@ -6,26 +5,21 @@ __all__ = [
 ]
 
 import os
-import numpy as np
 import typing
-import sqlalchemy
 import sqlalchemy.orm
 import sqlalchemy.dialects.postgresql
+from sqlalchemy import create_engine
 
 
-USERNAME = 'root'
-# PASSWORD = ''
-PASSWORD = "T8Yk1asmQDt5S76rpUhF4y0IEeP9d3C2"
-# HOST = 'localhost'
-HOST = "hkg1.clusters.zeabur.com"
-# PORT = '5432'
-PORT = 30581
-# DATABASE = 'public'
-DATABASE = "zeabur"
-# SCHEMA = 'public'
-SCHEMA = "public"
+# configs
+USERNAME = os.getenv('DB_USERNAME', 'root')
+PASSWORD = os.getenv('DB_PASSWORD', '')
+HOST = os.getenv('DB_HOST', 'localhost')
+PORT = int(os.getenv('DB_PORT', '5432'))
+DATABASE = os.getenv('DB_DATABASE', 'public')
+SCHEMA = os.getenv('DB_SCHEMA', 'public')
 
-SQLDB_ENGINE = sqlalchemy.create_engine(
+SQLDB_ENGINE = create_engine(
     f'postgresql+psycopg2://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}',
     connect_args={"options": f"-csearch_path={SCHEMA}"}
 )

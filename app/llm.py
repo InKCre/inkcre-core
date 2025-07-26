@@ -10,7 +10,7 @@ from openai import OpenAI
 from openai.types.chat import ChatCompletionUserMessageParam, ChatCompletionAssistantMessageParam
 
 # Config
-LLM_SP_AK = os.getenv("LLM_SP_BASE_URL", "")
+LLM_SP_AK = os.getenv("LLM_SP_AK", "")
 LLM_SP_BASE_URL = os.getenv("LLM_SP_BASE_URL", "")
 
 OPENAI_CLIENT = OpenAI(

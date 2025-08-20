@@ -1,18 +1,22 @@
 """Run API Service.
 """
 
+import contextlib
 import fastapi
 import uvicorn
 
-api_app = fastapi.FastAPI(title="InKCre")
 
-@api_app.get("/heartbeat")
-def heartbeat():
-    """Check if the API is running."""
-    return {"status": "ok"}
+@contextlib.asynccontextmanager
+async def lifespan(app: fastapi.FastAPI):
+    from app.task import scheduler
+    scheduler.start()
+    yield
+    scheduler.shutdown(wait=True)
+    await ExtensionManager.close_all()
 
 from app.business.block import BLOCK_ROUTER
 api_app.include_router(BLOCK_ROUTER)
+api_app = fastapi.FastAPI(title="InKCre", lifespan=lifespan)
 
 
 if __name__ == "__main__":

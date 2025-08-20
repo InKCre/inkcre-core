@@ -14,9 +14,16 @@ async def lifespan(app: fastapi.FastAPI):
     scheduler.shutdown(wait=True)
     await ExtensionManager.close_all()
 
-from app.business.block import BLOCK_ROUTER
-api_app.include_router(BLOCK_ROUTER)
+
 api_app = fastapi.FastAPI(title="InKCre", lifespan=lifespan)
+
+api_app.get("/heartbeat")(lambda: {"status": "ok"})
+
+from app.business.block import BLOCK_ROUTER  # noqa: E402
+api_app.include_router(BLOCK_ROUTER)  # TODO register routes here
+
+from app.business.extension import ExtensionManager  # noqa: E402
+ExtensionManager.start_all(api_app)
 
 from app.business.source import SourceManager  # noqa: E402
 source_router = fastapi.APIRouter(prefix="/source", tags=["sources"])

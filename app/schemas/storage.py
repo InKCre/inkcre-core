@@ -2,24 +2,20 @@ import enum
 import typing
 import aiohttp
 import pydantic
-import sqlalchemy.orm
-import ssl
-import certifi
-from ..utils import enum_serializer
-
-
-AIOHTTP_CONNECTOR_GETTER = lambda: aiohttp.TCPConnector(ssl=ssl.create_default_context(cafile=certifi.where()))
-Base = sqlalchemy.orm.declarative_base()
+import sqlalchemy
+from . import Base
+from ..utils.base import enum_serializer, AIOHTTP_CONNECTOR_GETTER
 
 
 class StorageType(enum.Enum):
     URL = "url"
 
+
 class StorageTable(Base):
     __tablename__ = 'storages'
 
-    name = sqlalchemy.Column(sqlalchemy.String, primary_key=True, nullable=False)
-    nickname = sqlalchemy.Column(sqlalchemy.String, nullable=True, default=None)
+    name = sqlalchemy.Column(sqlalchemy.Text, primary_key=True, nullable=False)
+    nickname = sqlalchemy.Column(sqlalchemy.Text, nullable=True, default=None)
     type = sqlalchemy.Column(
         sqlalchemy.Enum(StorageType, name='storage_type', values_callable=lambda x: [e.value for e in x]),
         nullable=False

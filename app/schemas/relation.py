@@ -1,50 +1,50 @@
 import typing
+from typing import Optional as Opt
 import datetime
-import pydantic
-import sqlalchemy.orm
+import sqlalchemy
 import pgvector.sqlalchemy
-
+import sqlmodel
 from ..llm import get_embeddings
-from ..schemas.block import BlockTable
-
-Base = sqlalchemy.orm.declarative_base()
+from ..schemas.block import BlockModel
 
 
-class RelationTable(Base):
-    __tablename__ = 'relations'
+class RelationModel(sqlmodel.SQLModel, table=True):
+    __tablename__ = 'relations'  # type: ignore
 
-    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    updated_at = sqlalchemy.Column(sqlalchemy.DateTime,
-        default=datetime.datetime.now, onupdate=datetime.datetime.now, nullable=False
+    id: Opt[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(sqlmodel.Integer, primary_key=True, autoincrement=True),
+        default=None
     )
-    from_ = sqlalchemy.Column(sqlalchemy.Integer,
-        sqlalchemy.ForeignKey(BlockTable.id), nullable=False
-    )
-    to_ = sqlalchemy.Column(sqlalchemy.Integer,
-        sqlalchemy.ForeignKey(BlockTable.id), nullable=False
-    )
-    content = sqlalchemy.Column(sqlalchemy.String, nullable=False)
-    embedding = sqlalchemy.Column(pgvector.sqlalchemy.VECTOR(1024), nullable=True, default=None)
-
-    @classmethod
-    def to_model(cls, table: type[typing.Self]) -> 'RelationModel':
-        return RelationModel.model_validate(table)
-
-
-class RelationModel(pydantic.BaseModel):
-    model_config = pydantic.ConfigDict(from_attributes=True)
-
-    id: int | None = None
-    updated_at: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
-    from_: int
-    to_: int
-    content: str
-
-    def to_table(self) -> RelationTable:
-        return RelationTable(
-            embedding=self.get_embedding(),
-            **self.model_dump()
+    updated_at: datetime.datetime = sqlmodel.Field(
+        default_factory=datetime.datetime.now, 
+        sa_column=sqlalchemy.Column(
+            sqlalchemy.TIMESTAMP(timezone=True), onupdate=datetime.datetime.now
         )
+    )
+    from_: int = sqlmodel.Field(
+        sa_column=sqlalchemy.Column(
+            sqlalchemy.Integer,
+            sqlalchemy.ForeignKey("blocks.id", ondelete="CASCADE", onupdate="CASCADE")
+        )
+    )
+    to_: int = sqlmodel.Field(
+        sa_column=sqlalchemy.Column(
+            sqlalchemy.Integer,
+            sqlalchemy.ForeignKey("blocks.id", ondelete="CASCADE", onupdate="CASCADE")
+        )
+    )
+    content: str = sqlmodel.Field(
+        sa_column=sqlalchemy.Column(sqlalchemy.Text, nullable=False)
+    )
 
     def get_embedding(self) -> list[float] | None:
         return get_embeddings(self.content)
+
+
+class RelationEmbeddingModel(sqlmodel.SQLModel, table=True):
+    __tablename__ = 'relation_embeddings'  # type: ignore
+
+    id: int = sqlmodel.Field(foreign_key="relations.id", primary_key=True, nullable=False)
+    embedding: tuple[float, ...] = sqlmodel.Field(
+        sa_column=sqlalchemy.Column(pgvector.sqlalchemy.VECTOR(1024), nullable=False)
+    )

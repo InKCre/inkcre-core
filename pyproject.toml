@@ -33,5 +33,5 @@ dev = [
     "alembic-postgresql-enum>=1.8.0",
 ]
 
-[tool.pdm.resolution]
-excludes = ["inkcre-core"]
+[tool.poetry]
+package-mode = false

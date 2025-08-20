@@ -7,12 +7,13 @@ import typing
 import pydantic
 import fastapi
 import sqlalchemy.orm
-
+import sqlmodel
+from typing import Optional as Opt
 from .resolver import Resolver
 from ..engine import get_db_session, SessionLocal
 from ..llm import one_chat, multi_chat
-from ..schemas.block import BlockTable, BlockModel
-from ..schemas.relation import RelationTable, RelationModel
+from ..schemas.block import BlockModel, ResolverType
+from ..schemas.relation import RelationModel
 
 BLOCK_ROUTER = fastapi.APIRouter(
     prefix="/blocks"
@@ -29,30 +30,43 @@ def get_recent_blocks(
 
 def _get_recent_blocks(
     num: int,
-    db_session: sqlalchemy.orm.Session
-) -> list[BlockModel]:
-    block_tables = db_session.query(BlockTable).order_by(
-        BlockTable.updated_at.desc()
-    ).limit(num).all()
+    resolver: Opt[ResolverType] = None 
+) -> tuple[BlockModel, ...]:
+    """获取最新的块
+    
+    按创建时间倒序。
 
-    return [
-        BlockModel.model_validate(block_table)
-        for block_table in block_tables
-    ]
+    :param num: 获取的块数量
+    :param resolver: 限定解析器类型，None则不限定
+    """
+    with SessionLocal() as db_session:
+        blocks = db_session.exec(
+            sqlmodel.select(BlockModel)\
+                .order_by(sqlmodel.desc(BlockModel.created_at))\
+                .where(BlockModel.resolver == resolver if resolver else True)\
+                .limit(num)
+        ).all()
+
+        return tuple(blocks)
 
 @BLOCK_ROUTER.get("/{block_id}")
 def get_block(
     block_id: int,
-    db_session: sqlalchemy.orm.Session = fastapi.Depends(get_db_session),
 ) -> BlockModel:
-    return _get_block(block_id, db_session=db_session)
+    block = _get_block(block_id)
+    if block is None:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            detail=f"Block with id {block_id} not found."
+        )
+    return block
 
-def _get_block(
-    block_id: int,
-    db_session: sqlalchemy.orm.Session
-) -> BlockModel:
-    block_table = db_session.query(BlockTable).filter(BlockTable.id == block_id).one()
-    return BlockModel.model_validate(block_table)
+def _get_block(block_id: int) -> Opt[BlockModel]:
+    with SessionLocal() as db_session:
+        block = db_session.exec(
+            sqlmodel.select(BlockModel).where(BlockModel.id == block_id)
+        ).one_or_none()
+        return block
 
 
 @BLOCK_ROUTER.post("")
@@ -61,22 +75,25 @@ def create_block(
     response: fastapi.Response,
     background_tasks: fastapi.BackgroundTasks,
     organize: bool = True,
-    db_session: sqlalchemy.orm.Session = fastapi.Depends(get_db_session),
 ):
     """创建块
     """
-    block_table = body.to_table()
+    body = _create_block(body)
 
-    db_session.add(block_table)
-    db_session.commit()
-    db_session.refresh(block_table)
-
-    block_model = BlockModel.model_validate(block_table)
     if organize:
-        background_tasks.add_task(organize_block, block_model)
+        background_tasks.add_task(organize_block, body)
 
     response.status_code = 201
-    return block_model
+    return body
+
+
+def _create_block(block: BlockModel) -> BlockModel:
+    with SessionLocal() as db_session:
+        db_session.add(block)
+        db_session.commit()
+        db_session.refresh(block)
+    
+    return block
 
 
 async def organize_block(block: BlockModel):

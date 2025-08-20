@@ -10,9 +10,10 @@ import tencentcloud.lke.v20231130.lke_client
 import tencentcloud.lke.v20231130.models
 
 from ..engine import SessionLocal
-from ..schemas.block import ResolverType, BlockModel, BlockTable
-from ..schemas.relation import RelationModel, RelationTable
-from ..schemas.storage import AIOHTTP_CONNECTOR_GETTER, StorageType
+from ..schemas.block import ResolverType, BlockModel
+from ..schemas.relation import RelationModel
+from ..schemas.storage import StorageType
+from ..utils.base import AIOHTTP_CONNECTOR_GETTER
 
 
 TENCENT_LKE_CLIENT = tencentcloud.lke.v20231130.lke_client.LkeClient(
@@ -22,6 +23,20 @@ TENCENT_LKE_CLIENT = tencentcloud.lke.v20231130.lke_client.LkeClient(
 
 
 class Resolver(abc.ABC):
+
+    __rsotype__: str
+    """Resolver type
+    """
+
+    TypeToClass: dict[ResolverType, typing.Type["Resolver"]] = {}
+    """Map ResolverType to Resolver class
+    """
+
+    @classmethod
+    def register_resolver(
+        cls, resolver_cls: typing.Type["Resolver"]
+    ):
+        cls.TypeToClass[resolver_cls.__rsotype__] = resolver_cls
 
     @classmethod
     def new(cls, block: BlockModel) -> typing.Self:
@@ -74,6 +89,8 @@ class Img2TextResult(typing.TypedDict):
     details: list[Detail]
     summary: str
 class ImageResolver(Resolver):
+
+    __rsotype__ = "image"
 
     async def extract_blocks_and_relations(self) -> \
             typing.Callable[[], typing.Generator[Resolver.B_or_R_TV, Resolver.B_or_R_TV, None]]:
@@ -131,12 +148,13 @@ class ImageResolver(Resolver):
                 resp = TENCENT_LKE_CLIENT.DescribeNodeRun(req)
                 if not resp.NodeRun.OutputRef:
                     return json.loads(resp.NodeRun.Output)
-                # TODO extract to download()
-                async with aiohttp.ClientSession(connector=AIOHTTP_CONNECTOR_GETTER()) as session:
-                    async with session.get(resp.NodeRun.OutputRef) as response:
-                        response.raise_for_status()
-                        raw_res = await response.json()
-                        return raw_res
+                else:
+                    # TODO extract to download()
+                    async with aiohttp.ClientSession(connector=AIOHTTP_CONNECTOR_GETTER()) as session:
+                        async with session.get(resp.NodeRun.OutputRef) as response:
+                            response.raise_for_status()
+                            raw_res = await response.json()
+                            return raw_res
                 # else:
                     # return requests.get(url=resp.NodeRun.OutputRef).json()
 
